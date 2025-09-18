@@ -1,0 +1,154 @@
+{
+  "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "ESLint",
+          "version": "8.57.0",
+          "rules": [
+            {
+              "id": "no-unused-vars",
+              "shortDescription": {
+                "text": "Disallow unused variables"
+              },
+              "fullDescription": {
+                "text": "Variables that are declared and not used anywhere in the code are most likely an error due to incomplete refactoring."
+              },
+              "help": {
+                "text": "This rule is aimed at eliminating unused variables, functions, and function parameters.",
+                "markdown": "This rule is aimed at eliminating unused variables, functions, and function parameters. A variable foo is considered to be used if any of the following are true:\n\n* It represents a function that is called (`doSomething()`)\n* It is read (`var y = x`)\n* It is passed into a function as an argument (`doSomething(x)`)\n* It is read inside of a function that is passed to another function (`doSomething(function() { foo(); })`)\n\nA variable is not considered to be used if it is only ever declared (`var foo = 5`) or assigned to (`foo = 7`)."
+              },
+              "helpUri": "https://eslint.org/docs/rules/no-unused-vars",
+              "properties": {
+                "category": "Variables",
+                "recommended": true
+              }
+            },
+            {
+              "id": "security/detect-object-injection",
+              "shortDescription": {
+                "text": "Detects variable object bracket notation"
+              },
+              "fullDescription": {
+                "text": "Detects variable object bracket notation, which can lead to object injection vulnerabilities"
+              },
+              "help": {
+                "text": "Variable object bracket notation can lead to object injection vulnerabilities if user input is not properly sanitized.",
+                "markdown": "## Object Injection Vulnerability\n\nVariable object bracket notation like `obj[key]` can lead to prototype pollution if `key` comes from user input.\n\n### Remediation\n- Use `Object.hasOwnProperty()` checks\n- Use `Map` instead of objects for dynamic keys\n- Validate user input"
+              },
+              "helpUri": "https://security.snyk.io/vuln/SNYK-JS-LODASH-567746",
+              "properties": {
+                "category": "Security",
+                "recommended": true,
+                "cwe": "CWE-1321"
+              }
+            }
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "location": {
+            "uri": "src/utils/parser.js"
+          }
+        },
+        {
+          "location": {
+            "uri": "src/components/Dashboard.js"
+          }
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "no-unused-vars",
+          "level": "warning",
+          "message": {
+            "text": "'unusedVariable' is defined but never used."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/utils/parser.js"
+                },
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 7,
+                  "endLine": 15,
+                  "endColumn": 21
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "Remove unused variable"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/utils/parser.js"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "startLine": 15,
+                        "startColumn": 1,
+                        "endLine": 16,
+                        "endColumn": 1
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "security/detect-object-injection",
+          "level": "error",
+          "message": {
+            "text": "Variable object access may lead to object injection vulnerability."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/components/Dashboard.js"
+                },
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 12,
+                  "endLine": 23,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/components/Dashboard.js"
+                },
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 5,
+                  "endLine": 21,
+                  "endColumn": 8
+                }
+              },
+              "message": {
+                "text": "User input source"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
