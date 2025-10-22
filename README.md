@@ -1,5 +1,7 @@
 # SARIF Visualizer
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow.svg?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/nick_a)
+
 A modern, responsive web application for visualizing Static Analysis Results Interchange Format (SARIF) files. Built with React, TypeScript, and Tailwind CSS.
 
 ![SARIF Visualizer](https://img.shields.io/badge/SARIF-2.1.0-blue)
