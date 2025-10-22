@@ -1,16 +1,17 @@
 import { create } from 'zustand';
+import type { Location, Fix, Suppression, ReportingDescriptor, PropertyBag, Run } from '../types/sarif';
 
 export interface SarifIssue {
   id: string;
   ruleId: string;
   severity: 'error' | 'warning' | 'note' | 'info';
   message: string;
-  locations: any[];
-  relatedLocations: any[];
-  fixes: any[];
-  suppressions: any[];
+  locations: Location[];
+  relatedLocations: Location[];
+  fixes: Fix[];
+  suppressions: Suppression[];
   runIndex: number;
-  rule?: any;
+  rule?: ReportingDescriptor;
 }
 
 export interface SarifRule {
@@ -19,7 +20,7 @@ export interface SarifRule {
   fullDescription?: { text: string };
   help?: { text: string; markdown?: string };
   helpUri?: string;
-  properties?: any;
+  properties?: PropertyBag;
   runIndex: number;
   toolName: string;
 }
@@ -37,7 +38,7 @@ export interface ParsedSarifData {
   stats: SarifStats;
   issues: SarifIssue[];
   rules: Record<string, SarifRule>;
-  runs: any[];
+  runs: Run[];
 }
 
 interface SarifFilters {
@@ -123,9 +124,9 @@ export const useSarifStore = create<SarifStore>((set, get) => ({
 
       // File filter
       if (filters.file.length > 0) {
-        const issueFiles = issue.locations.map(loc => 
-          loc.physicalLocation?.artifactLocation?.uri
-        ).filter(Boolean);
+        const issueFiles = issue.locations
+          .map(loc => loc.physicalLocation?.artifactLocation?.uri)
+          .filter((uri): uri is string => typeof uri === 'string');
         
         if (!issueFiles.some(file => filters.file.includes(file))) {
           return false;

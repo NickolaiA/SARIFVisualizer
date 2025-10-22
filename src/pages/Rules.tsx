@@ -41,7 +41,8 @@ export default function Rules() {
       <div className="grid gap-6">
         {Object.entries(rules).map(([ruleId, rule]) => {
           const issueCount = stats.ruleBreakdown[ruleId] || 0;
-          const Icon = getSeverityIcon(rule.properties?.severity || 'info');
+          const severity = typeof rule.properties?.severity === 'string' ? rule.properties.severity : 'info';
+          const Icon = getSeverityIcon(severity);
           
           return (
             <div key={ruleId} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
@@ -49,9 +50,9 @@ export default function Rules() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-lg font-semibold text-gray-900">{ruleId}</h3>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getSeverityColor(rule.properties?.severity || 'info')}`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getSeverityColor(severity)}`}>
                       <Icon className="w-3 h-3 mr-1" />
-                      {rule.properties?.severity || 'info'}
+                      {severity}
                     </span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                       {issueCount} issues
@@ -73,10 +74,10 @@ export default function Rules() {
                       <Book className="w-4 h-4 mr-1" />
                       Tool: {rule.toolName}
                     </span>
-                    {rule.properties?.category && (
+                    {typeof rule.properties?.category === 'string' && (
                       <span>Category: {rule.properties.category}</span>
                     )}
-                    {rule.properties?.cwe && (
+                    {typeof rule.properties?.cwe === 'string' && (
                       <span>CWE: {rule.properties.cwe}</span>
                     )}
                   </div>

@@ -7,23 +7,29 @@ export default function Findings() {
   const { sarifData, getFilteredIssues, updateFilters, filters } = useSarifStore();
   const [localSearchTerm, setLocalSearchTerm] = useState(filters.searchTerm);
 
-  if (!sarifData) {
-    return <Navigate to="/" replace />;
-  }
-
-  const filteredIssues = getFilteredIssues();
-
   const availableFilters = useMemo(() => {
+    if (!sarifData) {
+      return { severities: [], rules: [], files: [] };
+    }
+    
     const severities = [...new Set(sarifData.issues.map(issue => issue.severity))];
     const rules = [...new Set(sarifData.issues.map(issue => issue.ruleId))];
     const files = [...new Set(
       sarifData.issues.flatMap(issue => 
-        issue.locations.map(loc => loc.physicalLocation?.artifactLocation?.uri).filter(Boolean)
+        issue.locations
+          .map(loc => loc.physicalLocation?.artifactLocation?.uri)
+          .filter((uri): uri is string => typeof uri === 'string')
       )
     )];
 
     return { severities, rules, files };
   }, [sarifData]);
+
+  if (!sarifData) {
+    return <Navigate to="/" replace />;
+  }
+
+  const filteredIssues = getFilteredIssues();
 
   const getSeverityColor = (severity: string) => {
     const colors = {

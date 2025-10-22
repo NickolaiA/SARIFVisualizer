@@ -1,3 +1,6 @@
+import type { PropertyBag } from '../types/sarif';
+import type { SarifRule } from '../store/sarifStore';
+
 export interface CVEInfo {
   id: string;
   description: string;
@@ -25,7 +28,7 @@ export interface VulnerabilityEnrichment {
 class EnrichmentService {
   private readonly cache = new Map<string, VulnerabilityEnrichment>();
 
-  async enrichRule(ruleId: string, helpUri?: string, properties?: any): Promise<VulnerabilityEnrichment | null> {
+  async enrichRule(ruleId: string, helpUri?: string, properties?: PropertyBag): Promise<VulnerabilityEnrichment | null> {
     // Check cache first
     const cacheKey = `${ruleId}-${helpUri}`;
     if (this.cache.has(cacheKey)) {
@@ -58,9 +61,9 @@ class EnrichmentService {
     }
   }
 
-  private extractCWEId(properties?: any, helpUri?: string): string | null {
+  private extractCWEId(properties?: PropertyBag, helpUri?: string): string | null {
     // Check properties first
-    if (properties?.cwe) {
+    if (properties?.cwe && typeof properties.cwe === 'string') {
       const match = properties.cwe.match(/CWE-(\d+)/i);
       if (match) return match[1];
     }
@@ -74,9 +77,9 @@ class EnrichmentService {
     return null;
   }
 
-  private extractCVEId(properties?: any, helpUri?: string): string | null {
+  private extractCVEId(properties?: PropertyBag, helpUri?: string): string | null {
     // Check properties first
-    if (properties?.cve) {
+    if (properties?.cve && typeof properties.cve === 'string') {
       const match = properties.cve.match(/CVE-(\d{4}-\d+)/i);
       if (match) return match[0];
     }
@@ -150,7 +153,7 @@ class EnrichmentService {
     }
   }
 
-  async enrichAllRules(rules: Record<string, any>): Promise<Record<string, VulnerabilityEnrichment | null>> {
+  async enrichAllRules(rules: Record<string, SarifRule>): Promise<Record<string, VulnerabilityEnrichment | null>> {
     const enrichments: Record<string, VulnerabilityEnrichment | null> = {};
     
     for (const [ruleId, rule] of Object.entries(rules)) {

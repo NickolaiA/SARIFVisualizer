@@ -4,7 +4,7 @@ import type { SarifLog, ParsedSarifData, SarifSummary } from '../types/sarif';
 // Worker message types
 export interface WorkerMessage {
   type: 'PARSE_SARIF' | 'PARSE_PROGRESS' | 'PARSE_COMPLETE' | 'PARSE_ERROR';
-  payload?: any;
+  payload?: unknown;
 }
 
 export interface ParseSarifMessage extends WorkerMessage {
@@ -45,16 +45,21 @@ const postProgress = (progress: number, stage: string) => {
 };
 
 // Helper function to validate SARIF structure
-const validateSarifStructure = (data: any): data is SarifLog => {
+const validateSarifStructure = (data: unknown): data is SarifLog => {
   if (!data || typeof data !== 'object') return false;
-  if (!data.version || typeof data.version !== 'string') return false;
-  if (!Array.isArray(data.runs)) return false;
+  const obj = data as Record<string, unknown>;
+  if (!obj.version || typeof obj.version !== 'string') return false;
+  if (!Array.isArray(obj.runs)) return false;
   
   // Basic validation of runs
-  for (const run of data.runs) {
-    if (!run.tool || !run.tool.driver || !run.tool.driver.name) {
-      return false;
-    }
+  for (const run of obj.runs) {
+    if (!run || typeof run !== 'object') return false;
+    const runObj = run as Record<string, unknown>;
+    if (!runObj.tool || typeof runObj.tool !== 'object') return false;
+    const tool = runObj.tool as Record<string, unknown>;
+    if (!tool.driver || typeof tool.driver !== 'object') return false;
+    const driver = tool.driver as Record<string, unknown>;
+    if (!driver.name) return false;
   }
   
   return true;

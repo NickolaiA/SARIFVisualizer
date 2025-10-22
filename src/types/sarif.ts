@@ -273,7 +273,7 @@ export type SuppressionStatus = 'accepted' | 'underReview' | 'rejected';
 
 // Additional interfaces for completeness
 export interface PropertyBag {
-  [key: string]: any;
+  [key: string]: unknown;
   tags?: string[];
 }
 

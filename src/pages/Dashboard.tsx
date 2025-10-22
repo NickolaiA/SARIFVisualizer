@@ -11,6 +11,29 @@ const SEVERITY_COLORS = {
   info: '#6b7280'
 };
 
+interface StatCardProps {
+  title: string;
+  value: number | string;
+  icon: React.ElementType;
+  color: string;
+  subtitle?: string;
+}
+
+const StatCard = ({ title, value, icon: Icon, color, subtitle }: StatCardProps) => (
+  <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+    <div className="flex items-start">
+      <div className={`p-3 rounded-xl ${color} shadow-lg flex-shrink-0`}>
+        <Icon className="h-6 w-6 text-white" />
+      </div>
+      <div className="ml-4 flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-600 mb-1 leading-tight">{title}</p>
+        <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
+        {subtitle && <p className="text-xs text-gray-500 leading-tight break-words">{subtitle}</p>}
+      </div>
+    </div>
+  </div>
+);
+
 export default function Dashboard() {
   const { sarifData } = useSarifStore();
 
@@ -22,7 +45,7 @@ export default function Dashboard() {
 
   // Prepare chart data
   const severityData = Object.entries(stats.severityBreakdown)
-    .filter(([_, count]) => count > 0)
+    .filter(([, count]) => count > 0)
     .map(([severity, count]) => ({
       name: severity,
       value: count,
@@ -42,27 +65,6 @@ export default function Dashboard() {
       fullPath: file,
       count 
     }));
-
-  const StatCard = ({ title, value, icon: Icon, color, subtitle }: {
-    title: string;
-    value: number | string;
-    icon: React.ElementType;
-    color: string;
-    subtitle?: string;
-  }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-      <div className="flex items-start">
-        <div className={`p-3 rounded-xl ${color} shadow-lg flex-shrink-0`}>
-          <Icon className="h-6 w-6 text-white" />
-        </div>
-        <div className="ml-4 flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-600 mb-1 leading-tight">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
-          {subtitle && <p className="text-xs text-gray-500 leading-tight break-words">{subtitle}</p>}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-8">

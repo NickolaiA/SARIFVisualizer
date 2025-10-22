@@ -2,6 +2,7 @@ import { useParams, Navigate, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, ExternalLink, AlertTriangle, MapPin, Code, Wrench } from 'lucide-react';
 import { useSarifStore } from '../store/sarifStore';
+import type { ArtifactChange, Replacement } from '../types/sarif';
 
 export default function FindingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -157,15 +158,17 @@ export default function FindingDetail() {
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-700">Tool</h3>
-              <p className="text-sm text-gray-900">{issue.rule.toolName}</p>
+              <p className="text-sm text-gray-900">
+                {sarifData.stats.tools.find(t => t.runIndex === issue.runIndex)?.name || 'Unknown'}
+              </p>
             </div>
-            {issue.rule.properties?.category && (
+            {typeof issue.rule.properties?.category === 'string' && (
               <div>
                 <h3 className="text-sm font-medium text-gray-700">Category</h3>
                 <p className="text-sm text-gray-900">{issue.rule.properties.category}</p>
               </div>
             )}
-            {issue.rule.properties?.cwe && (
+            {typeof issue.rule.properties?.cwe === 'string' && (
               <div>
                 <h3 className="text-sm font-medium text-gray-700">CWE</h3>
                 <p className="text-sm text-gray-900">{issue.rule.properties.cwe}</p>
@@ -218,12 +221,12 @@ export default function FindingDetail() {
                 <h3 className="font-medium text-gray-900 mb-2">
                   {fix.description?.text || `Fix ${index + 1}`}
                 </h3>
-                {fix.artifactChanges?.map((change: any, changeIndex: number) => (
+                {fix.artifactChanges?.map((change: ArtifactChange, changeIndex: number) => (
                   <div key={changeIndex} className="mt-2">
                     <p className="text-sm text-gray-600 mb-1">
                       File: {change.artifactLocation?.uri}
                     </p>
-                    {change.replacements?.map((replacement: any, repIndex: number) => (
+                    {change.replacements?.map((replacement: Replacement, repIndex: number) => (
                       <div key={repIndex} className="bg-gray-50 rounded p-2 text-sm">
                         <p className="text-gray-600 mb-1">Replacement:</p>
                         <pre className="text-gray-900">{replacement.insertedContent?.text || 'Delete content'}</pre>

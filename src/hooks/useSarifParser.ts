@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
-import { useSarifStore } from '../store/sarifStore';
+import { useSarifStore, type SarifIssue, type SarifRule } from '../store/sarifStore';
+import type { SarifLog, Run, ReportingDescriptor, Result, Location } from '../types/sarif';
 
 export const useSarifParser = () => {
   const { setSarifData, setLoading, setError } = useSarifStore();
@@ -58,7 +59,7 @@ export const useSarifParser = () => {
 };
 
 // Inline parser for smaller files (same logic as worker)
-function parseSarif(sarifData: any) {
+function parseSarif(sarifData: SarifLog) {
   const stats = {
     totalIssues: 0,
     severityBreakdown: {
@@ -73,10 +74,10 @@ function parseSarif(sarifData: any) {
     tools: [] as Array<{ name: string; version: string; runIndex: number }>
   };
 
-  const issues: any[] = [];
-  const rules: Record<string, any> = {};
+  const issues: SarifIssue[] = [];
+  const rules: Record<string, SarifRule> = {};
 
-  sarifData.runs?.forEach((run: any, runIndex: number) => {
+  sarifData.runs?.forEach((run: Run, runIndex: number) => {
     // Extract tool information
     const tool = {
       name: run.tool?.driver?.name || 'Unknown',
@@ -86,16 +87,21 @@ function parseSarif(sarifData: any) {
     stats.tools.push(tool);
 
     // Extract rules
-    run.tool?.driver?.rules?.forEach((rule: any) => {
+    run.tool?.driver?.rules?.forEach((rule: ReportingDescriptor) => {
       rules[rule.id] = {
-        ...rule,
+        id: rule.id,
+        shortDescription: rule.shortDescription ? { text: rule.shortDescription.text || '' } : undefined,
+        fullDescription: rule.fullDescription ? { text: rule.fullDescription.text || '' } : undefined,
+        help: rule.help ? { text: rule.help.text || '', markdown: rule.help.markdown } : undefined,
+        helpUri: rule.helpUri,
+        properties: rule.properties,
         runIndex,
         toolName: tool.name
       };
     });
 
     // Process results
-    run.results?.forEach((result: any, resultIndex: number) => {
+    run.results?.forEach((result: Result, resultIndex: number) => {
       const severity = result.level || 'warning';
       const ruleId = result.ruleId || 'unknown';
       
@@ -103,9 +109,9 @@ function parseSarif(sarifData: any) {
       
       // Type-safe severity breakdown update
       if (severity in stats.severityBreakdown) {
-        (stats.severityBreakdown as any)[severity]++;
+        (stats.severityBreakdown as Record<string, number>)[severity]++;
       } else {
-        (stats.severityBreakdown as any)[severity] = 1;
+        (stats.severityBreakdown as Record<string, number>)[severity] = 1;
       }
       
       stats.ruleBreakdown[ruleId] = (stats.ruleBreakdown[ruleId] || 0) + 1;
@@ -115,7 +121,7 @@ function parseSarif(sarifData: any) {
       }
 
       // Extract file information
-      result.locations?.forEach((location: any) => {
+      result.locations?.forEach((location: Location) => {
         const uri = location.physicalLocation?.artifactLocation?.uri;
         if (uri) {
           stats.fileBreakdown[uri] = (stats.fileBreakdown[uri] || 0) + 1;
@@ -123,10 +129,10 @@ function parseSarif(sarifData: any) {
       });
 
       // Create issue object
-      const issue = {
+      const issue: SarifIssue = {
         id: `${runIndex}-${resultIndex}`,
         ruleId,
-        severity,
+        severity: severity as 'error' | 'warning' | 'note' | 'info',
         message: result.message?.text || '',
         locations: result.locations || [],
         relatedLocations: result.relatedLocations || [],
