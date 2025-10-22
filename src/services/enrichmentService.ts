@@ -33,7 +33,7 @@ class EnrichmentService {
     }
 
     try {
-      let enrichment: VulnerabilityEnrichment = {
+      const enrichment: VulnerabilityEnrichment = {
         enrichmentDate: new Date().toISOString()
       };
 

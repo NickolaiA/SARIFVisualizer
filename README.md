@@ -65,6 +65,23 @@ A modern, responsive web application for visualizing Static Analysis Results Int
    http://localhost:5173
    ```
 
+### Docker Deployment
+
+For production deployment using Docker:
+
+```bash
+# Using Docker Compose (recommended)
+docker-compose up -d
+
+# Or using Docker directly
+docker build -t sarifvisualizer .
+docker run -d -p 99:80 --name sarifvisualizer sarifvisualizer
+```
+
+Access the application at `http://localhost:99`
+
+For detailed Docker instructions, see [README.Docker.md](README.Docker.md)
+
 ## 📖 Usage
 
 ### 1. Upload SARIF File

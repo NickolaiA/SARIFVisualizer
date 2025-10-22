@@ -1,0 +1,12 @@
+services:
+  sarifvisualizer:
+    build: .
+    image: sarifvisualizer:latest
+    ports:
+      - '99:80' # map host 99 to container 80
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost/']
+      interval: 30s
+      timeout: 5s
+      retries: 3
