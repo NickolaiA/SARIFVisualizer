@@ -67,20 +67,85 @@ A modern, responsive web application for visualizing Static Analysis Results Int
 
 ### Docker Deployment
 
-For production deployment using Docker:
+**Using Docker Compose (recommended):**
 
 ```bash
-# Using Docker Compose (recommended)
 docker-compose up -d
+```
 
-# Or using Docker directly
+**Or build and run manually:**
+
+```bash
+# Build the image
 docker build -t sarifvisualizer .
+
+# Run the container (map host port 99 to container port 80)
 docker run -d -p 99:80 --name sarifvisualizer sarifvisualizer
 ```
 
 Access the application at `http://localhost:99`
 
-For detailed Docker instructions, see [README.Docker.md](README.Docker.md)
+**Docker Hub Publishing:**
+
+To publish this image to Docker Hub, use the provided scripts:
+
+**PowerShell (Windows):**
+```powershell
+# Push with version tag (e.g., v1.0.0)
+.\docker-push.ps1 1.0.0
+
+# Or push as latest
+.\docker-push.ps1
+```
+
+**Bash (Linux/Mac):**
+```bash
+# Make script executable (first time only)
+chmod +x docker-push.sh
+
+# Push with version tag (e.g., v1.0.0)
+./docker-push.sh 1.0.0
+
+# Or push as latest
+./docker-push.sh
+```
+
+The scripts will:
+1. Authenticate with Docker Hub (login prompt)
+2. Build the Docker image
+3. Tag the image with your specified version
+4. Tag the image as `latest` (if version is specified)
+5. Push both tags to Docker Hub
+
+**Manual Publishing:**
+
+```bash
+# Login to Docker Hub
+docker login
+
+# Tag the image with your Docker Hub username
+docker tag sarifvisualizer mykolaa25/sarifvisualizer:latest
+
+# Push to Docker Hub
+docker push mykolaa25/sarifvisualizer:latest
+
+# Or push with a specific version tag
+docker tag sarifvisualizer mykolaa25/sarifvisualizer:v1.0.0
+docker push mykolaa25/sarifvisualizer:v1.0.0
+```
+
+**Pull and run from Docker Hub:**
+
+```bash
+docker pull mykolaa25/sarifvisualizer:latest
+docker run -d -p 99:80 --name sarifvisualizer mykolaa25/sarifvisualizer:latest
+```
+
+**Docker Notes:**
+- Multi-stage build: Node 20 builds the app, nginx serves the static files
+- Container runs on port 80 internally, mapped to host port 99
+- Includes healthcheck endpoint at `/`
+- If build fails, run `npm run build` locally to see detailed errors
 
 ## 📖 Usage
 
