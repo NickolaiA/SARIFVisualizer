@@ -100,9 +100,19 @@ The container runs a static web application and requires no environment variable
 
 - **Base Image**: nginx:stable-alpine
 - **Build Process**: Multi-stage build (Node 20 → nginx)
+- **Platforms**: linux/amd64, linux/arm64 (multi-platform support)
 - **Internal Port**: 80
 - **Size**: Optimized for production
 - **Healthcheck**: Built-in healthcheck on root endpoint
+
+### Supported Architectures
+
+This image supports multiple architectures:
+
+- `linux/amd64` - Intel/AMD 64-bit (Windows, Linux, Mac Intel)
+- `linux/arm64` - ARM 64-bit (Mac M1/M2/M3, Raspberry Pi, AWS Graviton)
+
+Docker will automatically pull the correct image for your platform.
 
 ## 🔗 Links
 

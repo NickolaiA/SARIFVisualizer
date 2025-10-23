@@ -20,11 +20,12 @@ NC='\033[0m' # No Color
 
 echo -e "${CYAN}===================================${NC}"
 echo -e "${CYAN}SARIF Visualizer - Docker Hub Push${NC}"
+echo -e "${CYAN}Multi-Platform Build (linux/amd64, linux/arm64)${NC}"
 echo -e "${CYAN}===================================${NC}"
 echo ""
 
 # Step 1: Docker Login
-echo -e "${YELLOW}[1/5] Authenticating with Docker Hub...${NC}"
+echo -e "${YELLOW}[1/4] Authenticating with Docker Hub...${NC}"
 if docker login; then
     echo -e "${GREEN}✅ Authentication successful${NC}"
 else
@@ -33,55 +34,43 @@ else
 fi
 echo ""
 
-# Step 2: Build the image
-echo -e "${YELLOW}[2/5] Building Docker image...${NC}"
-if docker build -t "$IMAGE_NAME" .; then
-    echo -e "${GREEN}✅ Build successful${NC}"
-else
-    echo -e "${RED}❌ Docker build failed!${NC}"
-    exit 1
-fi
+# Step 2: Create/use buildx builder
+echo -e "${YELLOW}[2/4] Setting up Docker Buildx for multi-platform builds...${NC}"
+docker buildx create --name multiplatform --use 2>/dev/null || docker buildx use multiplatform 2>/dev/null || true
+docker buildx inspect --bootstrap > /dev/null 2>&1
+echo -e "${GREEN}✅ Buildx ready${NC}"
 echo ""
 
-# Step 3: Tag with version
-echo -e "${YELLOW}[3/5] Tagging image as $DOCKERHUB_REPO:$VERSION...${NC}"
-if docker tag "$IMAGE_NAME" "$DOCKERHUB_REPO:$VERSION"; then
-    echo -e "${GREEN}✅ Tagged successfully${NC}"
-else
-    echo -e "${RED}❌ Docker tag failed!${NC}"
-    exit 1
-fi
-echo ""
+# Step 3: Build and push multi-platform image
+echo -e "${YELLOW}[3/4] Building and pushing multi-platform image...${NC}"
+echo -e "${GRAY}      Platforms: linux/amd64, linux/arm64${NC}"
+echo -e "${GRAY}      Tags: $DOCKERHUB_REPO:$VERSION${NC}"
 
-# Step 4: Tag as latest (if version is not 'latest')
+TAGS="--tag $DOCKERHUB_REPO:$VERSION"
 if [ "$VERSION" != "latest" ]; then
-    echo -e "${YELLOW}[4/5] Tagging image as $DOCKERHUB_REPO:latest...${NC}"
-    if docker tag "$IMAGE_NAME" "$DOCKERHUB_REPO:latest"; then
-        echo -e "${GREEN}✅ Tagged as latest${NC}"
-    else
-        echo -e "${YELLOW}⚠️  Failed to tag as latest (continuing...)${NC}"
-    fi
+    echo -e "${GRAY}             $DOCKERHUB_REPO:latest${NC}"
+    TAGS="$TAGS --tag $DOCKERHUB_REPO:latest"
+fi
+
+if docker buildx build --platform linux/amd64,linux/arm64 $TAGS --push .; then
+    echo -e "${GREEN}✅ Build and push successful${NC}"
 else
-    echo -e "${GRAY}[4/5] Skipping additional 'latest' tag (already tagged)${NC}"
+    echo -e "${RED}❌ Multi-platform build and push failed!${NC}"
+    echo ""
+    echo -e "${YELLOW}Troubleshooting:${NC}"
+    echo -e "${NC}  1. Make sure Docker daemon is running${NC}"
+    echo -e "${NC}  2. Try: docker buildx ls${NC}"
+    echo -e "${NC}  3. Check Docker documentation for buildx setup${NC}"
+    exit 1
 fi
 echo ""
 
-# Step 5: Push to Docker Hub
-echo -e "${YELLOW}[5/5] Pushing to Docker Hub...${NC}"
-if docker push "$DOCKERHUB_REPO:$VERSION"; then
-    echo -e "${GREEN}✅ Pushed $DOCKERHUB_REPO:$VERSION${NC}"
-else
-    echo -e "${RED}❌ Docker push failed!${NC}"
-    exit 1
-fi
-
-# Push latest tag if it was created
-if [ "$VERSION" != "latest" ]; then
-    echo -e "${YELLOW}      Pushing latest tag...${NC}"
-    if docker push "$DOCKERHUB_REPO:latest"; then
-        echo -e "${GREEN}✅ Pushed $DOCKERHUB_REPO:latest${NC}"
-    fi
-fi
+# Step 4: Verify
+echo -e "${YELLOW}[4/4] Verifying multi-platform manifest...${NC}"
+docker buildx imagetools inspect "$DOCKERHUB_REPO:$VERSION" | grep "Platform" | while read line; do
+    echo -e "${GRAY}      $line${NC}"
+done
+echo -e "${GREEN}✅ Multi-platform image verified${NC}"
 
 echo ""
 echo -e "${CYAN}===================================${NC}"

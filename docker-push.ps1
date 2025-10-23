@@ -12,11 +12,12 @@ $DockerHubRepo = "$DockerHubUser/$ImageName"
 
 Write-Host "===================================" -ForegroundColor Cyan
 Write-Host "SARIF Visualizer - Docker Hub Push" -ForegroundColor Cyan
+Write-Host "Multi-Platform Build (linux/amd64, linux/arm64)" -ForegroundColor Cyan
 Write-Host "===================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Step 1: Docker Login
-Write-Host "[1/5] Authenticating with Docker Hub..." -ForegroundColor Yellow
+Write-Host "[1/4] Authenticating with Docker Hub..." -ForegroundColor Yellow
 docker login
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Docker login failed!" -ForegroundColor Red
@@ -25,58 +26,50 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "✅ Authentication successful" -ForegroundColor Green
 Write-Host ""
 
-# Step 2: Build the image
-Write-Host "[2/5] Building Docker image..." -ForegroundColor Yellow
-docker build -t $ImageName .
+# Step 2: Create/use buildx builder
+Write-Host "[2/4] Setting up Docker Buildx for multi-platform builds..." -ForegroundColor Yellow
+docker buildx create --name multiplatform --use 2>$null
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Docker build failed!" -ForegroundColor Red
-    exit 1
-}
-Write-Host "✅ Build successful" -ForegroundColor Green
-Write-Host ""
-
-# Step 3: Tag with version
-Write-Host "[3/5] Tagging image as $DockerHubRepo`:$Version..." -ForegroundColor Yellow
-docker tag $ImageName "$DockerHubRepo`:$Version"
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Docker tag failed!" -ForegroundColor Red
-    exit 1
-}
-Write-Host "✅ Tagged successfully" -ForegroundColor Green
-Write-Host ""
-
-# Step 4: Tag as latest (if version is not 'latest')
-if ($Version -ne "latest") {
-    Write-Host "[4/5] Tagging image as $DockerHubRepo`:latest..." -ForegroundColor Yellow
-    docker tag $ImageName "$DockerHubRepo`:latest"
+    # Builder might already exist, try to use it
+    docker buildx use multiplatform 2>$null
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "⚠️  Failed to tag as latest (continuing...)" -ForegroundColor Yellow
-    } else {
-        Write-Host "✅ Tagged as latest" -ForegroundColor Green
+        Write-Host "⚠️  Using default builder" -ForegroundColor Yellow
     }
-    Write-Host ""
-} else {
-    Write-Host "[4/5] Skipping additional 'latest' tag (already tagged)" -ForegroundColor Gray
-    Write-Host ""
+}
+docker buildx inspect --bootstrap | Out-Null
+Write-Host "✅ Buildx ready" -ForegroundColor Green
+Write-Host ""
+
+# Step 3: Build and push multi-platform image
+Write-Host "[3/4] Building and pushing multi-platform image..." -ForegroundColor Yellow
+Write-Host "      Platforms: linux/amd64, linux/arm64" -ForegroundColor Gray
+Write-Host "      Tags: $DockerHubRepo`:$Version" -ForegroundColor Gray
+
+$tags = "--tag $DockerHubRepo`:$Version"
+if ($Version -ne "latest") {
+    Write-Host "             $DockerHubRepo`:latest" -ForegroundColor Gray
+    $tags += " --tag $DockerHubRepo`:latest"
 }
 
-# Step 5: Push to Docker Hub
-Write-Host "[5/5] Pushing to Docker Hub..." -ForegroundColor Yellow
-docker push "$DockerHubRepo`:$Version"
+$buildCmd = "docker buildx build --platform linux/amd64,linux/arm64 $tags --push ."
+Invoke-Expression $buildCmd
+
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Docker push failed!" -ForegroundColor Red
+    Write-Host "❌ Multi-platform build and push failed!" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Troubleshooting:" -ForegroundColor Yellow
+    Write-Host "  1. Make sure Docker Desktop is running" -ForegroundColor White
+    Write-Host "  2. Enable 'Use containerd for pulling and storing images' in Docker Desktop settings" -ForegroundColor White
+    Write-Host "  3. Try: docker buildx ls" -ForegroundColor White
     exit 1
 }
-Write-Host "✅ Pushed $DockerHubRepo`:$Version" -ForegroundColor Green
+Write-Host "✅ Build and push successful" -ForegroundColor Green
+Write-Host ""
 
-# Push latest tag if it was created
-if ($Version -ne "latest") {
-    Write-Host "      Pushing latest tag..." -ForegroundColor Yellow
-    docker push "$DockerHubRepo`:latest"
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "✅ Pushed $DockerHubRepo`:latest" -ForegroundColor Green
-    }
-}
+# Step 4: Verify
+Write-Host "[4/4] Verifying multi-platform manifest..." -ForegroundColor Yellow
+docker buildx imagetools inspect "$DockerHubRepo`:$Version" | Select-String "Platform" | ForEach-Object { Write-Host "      $_" -ForegroundColor Gray }
+Write-Host "✅ Multi-platform image verified" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "===================================" -ForegroundColor Cyan

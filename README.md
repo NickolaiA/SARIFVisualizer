@@ -87,7 +87,7 @@ Access the application at `http://localhost:99`
 
 **Docker Hub Publishing:**
 
-To publish this image to Docker Hub, use the provided scripts:
+To publish this image to Docker Hub, use the provided scripts that build multi-platform images (linux/amd64, linux/arm64):
 
 **PowerShell (Windows):**
 ```powershell
@@ -112,10 +112,16 @@ chmod +x docker-push.sh
 
 The scripts will:
 1. Authenticate with Docker Hub (login prompt)
-2. Build the Docker image
-3. Tag the image with your specified version
-4. Tag the image as `latest` (if version is specified)
-5. Push both tags to Docker Hub
+2. Set up Docker Buildx for multi-platform builds
+3. Build the Docker image for **linux/amd64** and **linux/arm64** platforms
+4. Push both platform variants to Docker Hub with your specified version tag
+5. Also tag and push as `latest` (if version is specified)
+6. Verify the multi-platform manifest
+
+**Prerequisites for Multi-Platform Builds:**
+- Docker Desktop with BuildKit enabled (Windows/Mac)
+- Docker with buildx plugin (Linux)
+- For Docker Desktop: Enable "Use containerd for pulling and storing images" in Settings
 
 **Manual Publishing:**
 
@@ -123,15 +129,16 @@ The scripts will:
 # Login to Docker Hub
 docker login
 
-# Tag the image with your Docker Hub username
-docker tag sarifvisualizer mykolaa25/sarifvisualizer:latest
+# Build and push multi-platform image
+docker buildx build --platform linux/amd64,linux/arm64 \
+  --tag mykolaa25/sarifvisualizer:latest \
+  --push .
 
-# Push to Docker Hub
-docker push mykolaa25/sarifvisualizer:latest
-
-# Or push with a specific version tag
-docker tag sarifvisualizer mykolaa25/sarifvisualizer:v1.0.0
-docker push mykolaa25/sarifvisualizer:v1.0.0
+# Or with a specific version
+docker buildx build --platform linux/amd64,linux/arm64 \
+  --tag mykolaa25/sarifvisualizer:v1.0.0 \
+  --tag mykolaa25/sarifvisualizer:latest \
+  --push .
 ```
 
 **Pull and run from Docker Hub:**
