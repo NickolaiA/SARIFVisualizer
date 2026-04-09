@@ -16,6 +16,18 @@ import { useSarifStore } from '../store/sarifStore';
 import { enrichmentService, type VulnerabilityEnrichment } from '../services/enrichmentService';
 import type { ArtifactChange, Replacement } from '../types/sarif';
 
+const sanitizeUrl = (url: string): string => {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      return url;
+    }
+  } catch {
+    // invalid URL
+  }
+  return '#';
+};
+
 export default function EnhancedFindingDetail() {
   const { id } = useParams<{ id: string }>();
   const { sarifData } = useSarifStore();
@@ -135,7 +147,7 @@ export default function EnhancedFindingDetail() {
                     {enrichment.cwe.references.map((ref, index) => (
                       <a
                         key={index}
-                        href={ref}
+                        href={sanitizeUrl(ref)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200"
@@ -183,7 +195,7 @@ export default function EnhancedFindingDetail() {
                     {enrichment.cve.references.map((ref, index) => (
                       <a
                         key={index}
-                        href={ref}
+                        href={sanitizeUrl(ref)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 hover:bg-red-200"
@@ -325,7 +337,7 @@ export default function EnhancedFindingDetail() {
           {issue.rule.helpUri && (
             <div>
               <a
-                href={issue.rule.helpUri}
+                href={sanitizeUrl(issue.rule.helpUri)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
