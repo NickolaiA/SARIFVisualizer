@@ -15,18 +15,7 @@ import {
 import { useSarifStore } from '../store/sarifStore';
 import { enrichmentService, type VulnerabilityEnrichment } from '../services/enrichmentService';
 import type { ArtifactChange, Replacement } from '../types/sarif';
-
-const sanitizeUrl = (url: string): string => {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
-      return url;
-    }
-  } catch {
-    // invalid URL
-  }
-  return '#';
-};
+import { sanitizeUrl } from '../utils/sanitizeUrl';
 
 export default function EnhancedFindingDetail() {
   const { id } = useParams<{ id: string }>();

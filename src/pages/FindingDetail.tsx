@@ -3,18 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, ExternalLink, AlertTriangle, MapPin, Code, Wrench } from 'lucide-react';
 import { useSarifStore } from '../store/sarifStore';
 import type { ArtifactChange, Replacement } from '../types/sarif';
-
-const sanitizeUrl = (url: string): string => {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
-      return url;
-    }
-  } catch {
-    // invalid URL
-  }
-  return '#';
-};
+import { sanitizeUrl } from '../utils/sanitizeUrl';
 
 export default function FindingDetail() {
   const { id } = useParams<{ id: string }>();

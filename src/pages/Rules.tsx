@@ -2,18 +2,7 @@ import DOMPurify from 'dompurify';
 import { Navigate, Link } from 'react-router-dom';
 import { ExternalLink, Book, AlertTriangle, Info } from 'lucide-react';
 import { useSarifStore } from '../store/sarifStore';
-
-const sanitizeUrl = (url: string): string => {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
-      return url;
-    }
-  } catch {
-    // invalid URL
-  }
-  return '#';
-};
+import { sanitizeUrl } from '../utils/sanitizeUrl';
 
 export default function Rules() {
   const { sarifData } = useSarifStore();
