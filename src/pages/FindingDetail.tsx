@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, ExternalLink, AlertTriangle, MapPin, Code, Wrench } from 'lucide-react';
 import { useSarifStore } from '../store/sarifStore';
 import type { ArtifactChange, Replacement } from '../types/sarif';
+import { sanitizeUrl } from '../utils/sanitizeUrl';
 
 export default function FindingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -195,7 +196,7 @@ export default function FindingDetail() {
           {issue.rule.helpUri && (
             <div>
               <a
-                href={issue.rule.helpUri}
+                href={sanitizeUrl(issue.rule.helpUri)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"

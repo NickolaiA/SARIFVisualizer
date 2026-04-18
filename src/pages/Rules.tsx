@@ -1,6 +1,8 @@
+import DOMPurify from 'dompurify';
 import { Navigate, Link } from 'react-router-dom';
 import { ExternalLink, Book, AlertTriangle, Info } from 'lucide-react';
 import { useSarifStore } from '../store/sarifStore';
+import { sanitizeUrl } from '../utils/sanitizeUrl';
 
 export default function Rules() {
   const { sarifData } = useSarifStore();
@@ -86,7 +88,7 @@ export default function Rules() {
                 <div className="flex flex-col gap-2 ml-4">
                   {rule.helpUri && (
                     <a
-                      href={rule.helpUri}
+                      href={sanitizeUrl(rule.helpUri)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-primary-700 bg-primary-100 hover:bg-primary-200"
@@ -111,7 +113,7 @@ export default function Rules() {
                   <div 
                     className="text-sm text-gray-700 prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ 
-                      __html: rule.help.markdown.replace(/\n/g, '<br>') 
+                      __html: DOMPurify.sanitize(rule.help.markdown.replace(/\n/g, '<br>'))
                     }}
                   />
                 </div>
